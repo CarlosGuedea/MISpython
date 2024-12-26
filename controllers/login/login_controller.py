@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, make_response
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models.login.login_model import Usuario
 
 login_bp = Blueprint('login', __name__)
@@ -29,11 +29,17 @@ def login():
 
     # Configurar la cookie
     response.set_cookie(
-        "access_token",  # Nombre de la cookie
-        access_token,    # Valor de la cookie (el token)
-        httponly=True,   # Previene el acceso desde JavaScript
-        secure=False,    # Cambiar a True en producción para usar HTTPS
-        samesite='Strict',  # Controla el acceso cross-site
-        #max_age=120
+        "access_token",        # Nombre de la cookie
+        access_token,         # Valor de la cookie
+        httponly=True,         # Evita el acceso desde JavaScript
+        secure=True,          # Cambiar a True en producción (requiere HTTPS)
+        samesite='None',       # Permitir el acceso cross-origin
+        #max_age=50        # Tiempo de vida en segundos (5 minutos)
     )
     return response
+
+@login_bp.route('/protected', methods=['GET'])
+@jwt_required()
+def protected():
+    current_user = get_jwt_identity()
+    return jsonify({"message": f"Bienvenido, usuario {current_user}"})
