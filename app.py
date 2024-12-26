@@ -19,6 +19,7 @@ CORS(app, resources={r"/login": {"origins": "http://localhost:5173", "supports_c
 CORS(app, resources={r"/protected": {"origins": "http://localhost:5173", "supports_credentials": True}})
 CORS(app, resources={r"/token": {"origins": "http://localhost:5173", "supports_credentials": True}})
 
+
 # Registrar las rutas desde los controladores
 app.register_blueprint(prueba)
 app.register_blueprint(saludo)
