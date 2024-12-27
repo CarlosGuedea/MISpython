@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, session
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models.login.login_model import Usuario
+from models.login.usuarios_perfil_model import Usuarios_Perfil
+
 
 login_bp = Blueprint('login', __name__)
 
@@ -36,6 +38,23 @@ def login():
         samesite='None',       # Permitir el acceso cross-origin
         #max_age=50        # Tiempo de vida en segundos (5 minutos)
     )
+
+    perfiles_lista = Usuarios_Perfil.obtener_perfiles_por_usuario_id(usuario.id)
+
+    print(perfiles_lista)
+    
+    user_role = []
+    user_module = []
+    
+    # Iterar sobre los perfiles obtenidos de la base de datos
+    for perfil in perfiles_lista:
+        user_role.append(perfil.perfil_nombre)  # Asumimos que 'perfil_nombre' es un rol
+        user_module.append(perfil.modulo_nombre)  # Asumimos que 'modulo_nombre' es un módulo
+
+        # Almacenar los roles y módulos en la sesión
+        session['user_role'] = user_role
+        session['user_module'] = user_module
+
     return response
 
 @login_bp.route('/protected', methods=['GET'])

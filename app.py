@@ -1,12 +1,11 @@
 from flask import Flask
 from flask_cors import CORS  # Importar CORS
-from controllers.prueba import prueba
-from controllers.saludo import saludo
 from controllers.usuarios.usuarios_controller import usuario_bp
 from controllers.login.login_controller import login_bp
 from database.db_usuarios import init_db
 from flask_jwt_extended import JWTManager
 from authlib.integrations.flask_oauth2 import AuthorizationServer
+from controllers.usuarios_perfil.usuarios_perfil import perfil_bp
 
 
 
@@ -20,18 +19,17 @@ CORS(app, resources={r"/protected": {"origins": "http://localhost:5173", "suppor
 CORS(app, resources={r"/token": {"origins": "http://localhost:5173", "supports_credentials": True}})
 
 #CORS para el frontend
-CORS(app, resources={r"/prueba": {"origins": "https://mispythonbackend.azurewebsites.net", "supports_credentials": True}})
-CORS(app, resources={r"/saludo/*": {"origins": "https://mispythonbackend.azurewebsites.net", "supports_credentials": True}})
-CORS(app, resources={r"/login": {"origins": "https://mispythonbackend.azurewebsites.net", "supports_credentials": True}})
-CORS(app, resources={r"/protected": {"origins": "https://mispythonbackend.azurewebsites.net", "supports_credentials": True}})
-CORS(app, resources={r"/token": {"origins": "https://mispythonbackend.azurewebsites.net", "supports_credentials": True}})
+CORS(app, resources={r"/prueba": {"origins": "https://misalfa.netlify.app", "supports_credentials": True}})
+CORS(app, resources={r"/saludo/*": {"origins": "https://misalfa.netlify.app", "supports_credentials": True}})
+CORS(app, resources={r"/login": {"origins": "https://misalfa.netlify.app", "supports_credentials": True}})
+CORS(app, resources={r"/protected": {"origins": "https://misalfa.netlify.app", "supports_credentials": True}})
+CORS(app, resources={r"/token": {"origins": "https://misalfa.netlify.app", "supports_credentials": True}})
 
 
 # Registrar las rutas desde los controladores
-app.register_blueprint(prueba)
-app.register_blueprint(saludo)
 app.register_blueprint(usuario_bp)
 app.register_blueprint(login_bp)
+app.register_blueprint(perfil_bp)
 
 # Inicializar la base de datos
 init_db(app)
@@ -42,6 +40,7 @@ app.config['JWT_TOKEN_LOCATION'] = ['cookies']  # Configurar para usar cookies
 app.config['JWT_COOKIE_SECURE'] = False         # Cambiar a True en producción para usar HTTPS
 app.config['JWT_ACCESS_COOKIE_NAME'] = 'access_token'
 app.config['JWT_COOKIE_CSRF_PROTECT'] = False   # Habilitar protección CSRF si es necesario
+app.config['SECRET_KEY'] = 'super-secret'
 
 jwt = JWTManager(app)
 
