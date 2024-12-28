@@ -1,5 +1,6 @@
 from flask import Flask, Blueprint, jsonify
 from models.requisitos.requisitos_model_read import Requisitos_Read
+from models.requisitos.requisitos_model_detalle import Requisitos_Detalle
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Crear un blueprint para el controlador de usuarios
@@ -10,7 +11,7 @@ requisitos_bp = Blueprint('requisitos', __name__)
 @jwt_required()  # Proteger la ruta con JWT
 
 def Requisitos_Listar():
-    Requisitos = Requisitos_Read.obtener_requisitos()
+    Requisitos = Requisitos_Detalle.obtener_requisitos()
     # Consultar todos los requisitos
     resultado = [
         {
@@ -25,12 +26,24 @@ def Requisitos_Listar():
     return jsonify(resultado), 200
 
 # Ruta para obtener un usuario por su ID
-@requisitos_bp.route('/usuarios/<int:id>', methods=['GET'])
+@requisitos_bp.route('/requisitos/<int:id>', methods=['GET'])
+#@jwt_required()
 def obtener_requisito(id):
-    usuario = Usuario.query.get(id)
-    if usuario:
-        return jsonify({"id": usuario.id, "nombre": usuario.nombre, "email": usuario.email}), 200
-    return jsonify({"error": "Usuario no encontrado"}), 404
+    try:
+        requisito = Requisitos_Detalle.obtener_requisitos_detalle(id)
+        if requisito:
+            resultado = {
+                "id": requisito.id,
+                "estatus": requisito.estatus,
+                "codigo": requisito.codigo,
+                "requisito": requisito.valor,
+                "etiqueta": requisito.etiqueta,
+            }
+            return jsonify(resultado)
+        else:
+            return jsonify({"error": "Requisito no encontrado"}), 404
+    except Exception as e:
+        return jsonify({"error": f"Error al procesar la solicitud: {str(e)}"}), 500
 
 # Ruta para crear un nuevo usuario
 @requisitos_bp.route('/usuarios', methods=['POST'])
