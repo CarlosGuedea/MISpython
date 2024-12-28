@@ -1,29 +1,40 @@
-from flask import Flask
-from models.usuarios.usuarios_model import Usuario_Local
+from flask import Flask, Blueprint, jsonify
+from models.requisitos.requisitos_model_read import Requisitos_Read
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Crear un blueprint para el controlador de usuarios
-usuario_bp = Blueprint('usuario', __name__)
+requisitos_bp = Blueprint('requisitos', __name__)
 
 # Ruta para obtener todos los usuarios
-@usuario_bp.route('/usuarios', methods=['GET'])
+@requisitos_bp.route('/requisitos', methods=['GET'])
 @jwt_required()  # Proteger la ruta con JWT
-def obtener_usuarios():
-    usuarios = Usuario_Local.query.all()  # Consultar todos los usuarios
-    resultado = [{"id": u.id, "email": u.correo, "password": u.password} for u in usuarios]
+
+def Requisitos_Listar():
+    Requisitos = Requisitos_Read.obtener_requisitos()
+    # Consultar todos los requisitos
+    resultado = [
+        {
+            "id": u.id,
+            "estatus": u.estatus,
+            "codigo": u.codigo,
+            "requisito": u.valor,
+            "etiqueta": u.etiqueta
+        }
+        for u in Requisitos  # Itera sobre cada objeto en la lista
+    ]
     return jsonify(resultado), 200
 
 # Ruta para obtener un usuario por su ID
-@usuario_bp.route('/usuarios/<int:id>', methods=['GET'])
-def obtener_usuario(id):
+@requisitos_bp.route('/usuarios/<int:id>', methods=['GET'])
+def obtener_requisito(id):
     usuario = Usuario.query.get(id)
     if usuario:
         return jsonify({"id": usuario.id, "nombre": usuario.nombre, "email": usuario.email}), 200
     return jsonify({"error": "Usuario no encontrado"}), 404
 
 # Ruta para crear un nuevo usuario
-@usuario_bp.route('/usuarios', methods=['POST'])
-def crear_usuario():
+@requisitos_bp.route('/usuarios', methods=['POST'])
+def crear_requisito():
     datos = request.get_json()
     if not datos or not datos.get("nombre") or not datos.get("email"):
         return jsonify({"error": "Datos incompletos"}), 400
@@ -34,8 +45,8 @@ def crear_usuario():
     return jsonify({"message": "Usuario creado exitosamente", "id": nuevo_usuario.id}), 201
 
 # Ruta para actualizar un usuario existente
-@usuario_bp.route('/usuarios/<int:id>', methods=['PUT'])
-def actualizar_usuario(id):
+@requisitos_bp.route('/usuarios/<int:id>', methods=['PUT'])
+def actualizar_requisito(id):
     usuario = Usuario.query.get(id)
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
@@ -50,8 +61,8 @@ def actualizar_usuario(id):
     return jsonify({"message": "Usuario actualizado exitosamente"}), 200
 
 # Ruta para eliminar un usuario
-@usuario_bp.route('/usuarios/<int:id>', methods=['DELETE'])
-def eliminar_usuario(id):
+@requisitos_bp.route('/usuarios/<int:id>', methods=['DELETE'])
+def eliminar_requisito(id):
     usuario = Usuario.query.get(id)
     if not usuario:
         return jsonify({"error": "Usuario no encontrado"}), 404
