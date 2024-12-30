@@ -1,7 +1,8 @@
-from flask import Flask, Blueprint, jsonify
+from flask import Flask, Blueprint, jsonify, request
 from models.requisitos.requisitos_model_read import Requisitos_Read
 from models.requisitos.requisitos_model_detalle import Requisitos_Detalle
 from models.requisitos.requisitos_model_seccion import Requisitos_Seccion
+from models.requisitos.requisitos_model_update import Requisitos_Update
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Crear un blueprint para el controlador de usuarios
@@ -31,7 +32,7 @@ from flask import jsonify
 
 #Ruta para obtener los detalles de los requisitos
 @requisitos_bp.route('/requisitos/<int:id>', methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def obtener_requisito_y_seccion(id):
     try:
         # Llamada a las funciones que obtienen los datos
@@ -86,6 +87,7 @@ def obtener_seccion(id):
     except Exception as e:
         return {"error": f"Error al obtener la sección: {str(e)}"}
 
+
 # Ruta para crear un nuevo usuario
 @requisitos_bp.route('/usuarios', methods=['POST'])
 def crear_requisito():
@@ -98,21 +100,36 @@ def crear_requisito():
     db.session.commit()
     return jsonify({"message": "Usuario creado exitosamente", "id": nuevo_usuario.id}), 201
 
+
 # Ruta para actualizar un usuario existente
-@requisitos_bp.route('/usuarios/<int:id>', methods=['PUT'])
+@requisitos_bp.route('/requisitos/<int:id>', methods=['PUT'])
+@jwt_required()
 def actualizar_requisito(id):
-    usuario = Usuario.query.get(id)
-    if not usuario:
-        return jsonify({"error": "Usuario no encontrado"}), 404
+    try:
+        print(request.json)
+        # Obtener los datos de la solicitud
+        data = request.get_json()
+        codigo = data.get("codigo")
+        requisito = data.get("requisito")
+        descripcion = data.get("descripcion")
 
-    datos = request.get_json()
-    if not datos:
-        return jsonify({"error": "Datos incompletos"}), 400
+        # Validar que todos los campos requeridos estén presentes
+        if not all([codigo, requisito, descripcion]):
+            return jsonify({"error": "Faltan datos obligatorios"}), 400
 
-    usuario.nombre = datos.get('nombre', usuario.nombre)
-    usuario.email = datos.get('email', usuario.email)
-    db.session.commit()
-    return jsonify({"message": "Usuario actualizado exitosamente"}), 200
+        # Llamar al modelo para realizar la actualización
+        actualizado = Requisitos_Update.update_requisitos(
+            id, codigo, requisito, descripcion
+        )
+
+        if actualizado:
+            return jsonify({"mensaje": "Requisito actualizado exitosamente"}), 200
+        else:
+            return jsonify({"error": "No se encontró el requisito con el ID proporcionado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": f"Error al procesar la solicitud: {str(e)}"}), 500
+
 
 # Ruta para eliminar un usuario
 @requisitos_bp.route('/usuarios/<int:id>', methods=['DELETE'])
