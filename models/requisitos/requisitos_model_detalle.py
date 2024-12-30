@@ -2,12 +2,13 @@ from database.db_admin_tramites import get_db_connection
 
 
 class Requisitos_Detalle:
-    def __init__(self, id, estatus, codigo, valor, etiqueta):
+    def __init__(self, id, estatus, codigo, valor, etiqueta, descripcion):
         self.id = id
         self.estatus = estatus
         self.codigo = codigo
         self.valor = valor
         self.etiqueta = etiqueta
+        self.descripcion = descripcion
 
     @staticmethod
     def obtener_requisitos_detalle(id):
@@ -20,7 +21,7 @@ class Requisitos_Detalle:
             cursor = conn.cursor()
 
             # Ejecutar la consulta SQL para obtener un único resultado
-            cursor.execute("SELECT id, estatus, codigo, valor, etiqueta FROM cat_requisitos WHERE id = ?", (id,))
+            cursor.execute("SELECT id, estatus, codigo, valor, etiqueta, descripcion FROM cat_requisitos WHERE id = ?", (id,))
             resultado = cursor.fetchone()  # Obtener un solo resultado
 
             if resultado:
@@ -31,6 +32,7 @@ class Requisitos_Detalle:
                     resultado[2],  # codigo
                     resultado[3],  # valor
                     resultado[4],  # etiqueta
+                    resultado[5],  #descripcion
                 )
             else:
                 return None  # Si no hay resultados, retorna None
