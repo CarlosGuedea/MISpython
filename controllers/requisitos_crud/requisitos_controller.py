@@ -3,6 +3,7 @@ from models.requisitos.requisitos_model_read import Requisitos_Read
 from models.requisitos.requisitos_model_detalle import Requisitos_Detalle
 from models.requisitos.requisitos_model_seccion import Requisitos_Seccion
 from models.requisitos.requisitos_model_update import Requisitos_Update
+from models.requisitos.requisitos_model_seccion_update import Seccion_Update
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Crear un blueprint para el controlador de usuarios
@@ -106,7 +107,6 @@ def crear_requisito():
 @jwt_required()
 def actualizar_requisito(id):
     try:
-        print(request.json)
         # Obtener los datos de la solicitud
         data = request.get_json()
         codigo = data.get("codigo")
@@ -126,6 +126,33 @@ def actualizar_requisito(id):
             return jsonify({"mensaje": "Requisito actualizado exitosamente"}), 200
         else:
             return jsonify({"error": "No se encontró el requisito con el ID proporcionado"}), 404
+
+    except Exception as e:
+        return jsonify({"error": f"Error al procesar la solicitud: {str(e)}"}), 500
+
+
+@requisitos_bp.route('/requisitos-seccion/<int:id>', methods=['PUT'])
+@jwt_required()
+def actualizar_seccion(id):
+    try:
+        # Obtener los datos de la solicitud
+        data = request.get_json()
+        valor = data.get("valor")
+        descripcion_seccion = data.get("descripcion_seccion")
+
+        # Validar que todos los campos requeridos estén presentes
+        if not all([valor, descripcion_seccion]):
+            return jsonify({"error": "Faltan datos obligatorios"}), 400
+
+        # Llamar al modelo para realizar la actualización
+        actualizado = Seccion_Update.actualizar_seccion(
+            id, valor, descripcion_seccion
+        )
+
+        if actualizado:
+            return jsonify({"mensaje": "Seccion actualizada exitosamente"}), 200
+        else:
+            return jsonify({"error": "No se encontró la seccion con el ID proporcionado"}), 404
 
     except Exception as e:
         return jsonify({"error": f"Error al procesar la solicitud: {str(e)}"}), 500
