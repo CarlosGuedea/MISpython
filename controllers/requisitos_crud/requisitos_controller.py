@@ -7,6 +7,7 @@ from models.requisitos.requisitos_model_seccion import Requisitos_Seccion
 from models.requisitos.requisitos_model_update import Requisitos_Update
 from models.requisitos.requisitos_model_seccion_update import Seccion_Update
 from models.requisitos.requisitos_model_nuevo import Requisitos_Nuevo
+from models.requisitos.requisitos_model_eliminar import Requisitos_Eliminar
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Crear un blueprint para el controlador de usuarios
@@ -210,13 +211,19 @@ def actualizar_seccion(id):
 
 
 # Ruta para eliminar un usuario
-@requisitos_bp.route('/usuarios/<int:id>', methods=['DELETE'])
+@requisitos_bp.route('/requisitos/<int:id>', methods=['DELETE'])
 def eliminar_requisito(id):
-    usuario = Usuario.query.get(id)
-    if not usuario:
-        return jsonify({"error": "Usuario no encontrado"}), 404
+    """
+    Elimina un requisito y su sección asociada de la base de datos.
+    """
+    try:
+        # Llamar al modelo para eliminar el requisito
+        resultado = Requisitos_Eliminar.eliminar_requisito(id)
 
-    db.session.delete(usuario)
-    db.session.commit()
-    return jsonify({"message": "Usuario eliminado exitosamente"}), 200
+        if resultado:
+            return jsonify({"message": "Requisito eliminado exitosamente"}), 200
+        else:
+            return jsonify({"error": "Requisito no encontrado"}), 404
 
+    except Exception as e:
+        return jsonify({"error": f"Error al eliminar requisito: {str(e)}"}), 500
