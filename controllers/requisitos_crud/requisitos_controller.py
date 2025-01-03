@@ -1,9 +1,12 @@
 from flask import Flask, Blueprint, jsonify, request
+from datetime import datetime
+import uuid
 from models.requisitos.requisitos_model_read import Requisitos_Read
 from models.requisitos.requisitos_model_detalle import Requisitos_Detalle
 from models.requisitos.requisitos_model_seccion import Requisitos_Seccion
 from models.requisitos.requisitos_model_update import Requisitos_Update
 from models.requisitos.requisitos_model_seccion_update import Seccion_Update
+from models.requisitos.requisitos_model_nuevo import Requisitos_Nuevo
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Crear un blueprint para el controlador de usuarios
@@ -33,7 +36,7 @@ from flask import jsonify
 
 #Ruta para obtener los detalles de los requisitos
 @requisitos_bp.route('/requisitos/<int:id>', methods=['GET'])
-#@jwt_required()
+@jwt_required()
 def obtener_requisito_y_seccion(id):
     try:
         # Llamada a las funciones que obtienen los datos
@@ -89,17 +92,65 @@ def obtener_seccion(id):
         return {"error": f"Error al obtener la sección: {str(e)}"}
 
 
-# Ruta para crear un nuevo usuario
-@requisitos_bp.route('/usuarios', methods=['POST'])
+# Ruta para crear un nuevo requisito
+@requisitos_bp.route('/requisitos-nuevo', methods=['POST'])
+@jwt_required()
 def crear_requisito():
-    datos = request.get_json()
-    if not datos or not datos.get("nombre") or not datos.get("email"):
-        return jsonify({"error": "Datos incompletos"}), 400
+    try:
+        data = request.json
+        print(data)
+        # Validar datos requeridos
+        if not data.get("requisito") or not data.get("seccion"):
+            return jsonify({"error": "Datos incompletos"}), 400
 
-    nuevo_usuario = Usuario(nombre=datos['nombre'], email=datos['email'])
-    db.session.add(nuevo_usuario)
-    db.session.commit()
-    return jsonify({"message": "Usuario creado exitosamente", "id": nuevo_usuario.id}), 201
+        # Extraer datos del frontend
+        requisito = data["requisito"]
+        seccion = data["seccion"]
+
+        # Generar campos predeterminados
+        uuid_requisito = str(uuid.uuid4())
+        fecha_actual = datetime.now()
+        id_area = 1  # Asignar un valor predeterminado
+        id_tarifa = 1  # Asignar un valor predeterminado
+        activo = 1
+        estatus = 1
+        fila = 1
+        tipo = "R"
+        usuario_creado = 1  # Se puede obtener del usuario autenticado
+
+        # Llamar al método del modelo
+        resultado = Requisitos_Nuevo.nuevo_requisitos(
+            uuid=uuid_requisito,
+            id_area=id_area,
+            valor=requisito["requisito"],
+            etiqueta=requisito["etiqueta"],
+            codigo=requisito["codigo"],
+            descripcion=requisito["descripcion"],
+            id_tarifa=id_tarifa,
+            activo=activo,
+            estatus=estatus,
+            usuario_creado=usuario_creado,
+            fecha_creado=fecha_actual,
+            fecha_eliminado=None,
+            tipo=tipo,
+            valor_seccion=seccion["nombre"],
+            descripcion_seccion=seccion["descripcion"],
+            fila=fila,
+            activo_seccion=activo,
+            estatus_seccion=estatus,
+            usuario_creado_seccion=usuario_creado,
+            fecha_creado_seccion=fecha_actual,
+            fecha_eliminado_seccion=None,
+        )
+
+        if resultado:
+            return jsonify({"message": "Requisito y sección creados exitosamente"}), 200
+        else:
+            return jsonify({"error": "No se pudo crear el requisito"}), 500
+
+    except Exception as e:
+        return jsonify({"error": f"Error: {str(e)}"}), 500
+
 
 
 # Ruta para actualizar un usuario existente
